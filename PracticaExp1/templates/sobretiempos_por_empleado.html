@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Sobretiempos de {{ empleado.nombre }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'sobretiempos_lista' %}">Sobretiempos</a></li>
+<li class="breadcrumb-item active">{{ empleado.nombre }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-person-circle"></i> Sobretiempos de {{ empleado.nombre }}</h2>
+        <p class="text-muted">Cédula: {{ empleado.cedula }} | Departamento: {{ empleado.departamento }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'empleado_detalle' empleado.id %}" class="btn btn-info">
+            <i class="bi bi-person"></i> Ver Empleado
+        </a>
+        <a href="{% url 'sobretiempos_lista' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h6>Total de Horas Extra</h6>
+            <div class="stats-number">{{ total_horas|floatformat:2 }} hrs</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <h6>Valor Total Acumulado</h6>
+            <div class="stats-number">${{ total_valor|floatformat:2 }}</div>
+        </div>
+    </div>
+</div>
+
+{% if sobretiempos %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list"></i> Historial de Sobretiempos ({{ sobretiempos.count }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Factor</th>
+                            <th>Horas</th>
+                            <th>Valor</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sobretiempo in sobretiempos %}
+                        <tr>
+                            <td>{{ sobretiempo.id }}</td>
+                            <td>{{ sobretiempo.fecha_registro|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ sobretiempo.tipo_sobretiempo.codigo }}</span>
+                                {{ sobretiempo.tipo_sobretiempo.descripcion }}
+                            </td>
+                            <td>{{ sobretiempo.tipo_sobretiempo.factor }}x</td>
+                            <td><strong>{{ sobretiempo.numero_horas }} hrs</strong></td>
+                            <td><span class="badge bg-success">${{ sobretiempo.valor|floatformat:2 }}</span></td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'sobretiempo_detalle' sobretiempo.id %}" class="btn btn-sm btn-info" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'sobretiempo_editar' sobretiempo.id %}" class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Este empleado no tiene sobretiempos registrados.
+    </div>
+{% endif %}
+{% endblock %}

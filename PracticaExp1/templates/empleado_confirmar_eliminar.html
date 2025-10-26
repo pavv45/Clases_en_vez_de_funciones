@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Empleado - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'empleados_lista' %}">Empleados</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'empleado_detalle' empleado.id %}">{{ empleado.nombre }}</a></li>
+    <li class="breadcrumb-item active">Eliminar</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-x text-danger" style="font-size: 4rem;"></i>
+                </div>
+
+                <h4 class="text-center mb-3">¿Está seguro de eliminar este empleado?</h4>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                </div>
+
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6>Información del empleado a eliminar:</h6>
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th width="30%">Nombre:</th>
+                                <td>{{ empleado.nombre }}</td>
+                            </tr>
+                            <tr>
+                                <th>Cédula:</th>
+                                <td>{{ empleado.cedula }}</td>
+                            </tr>
+                            <tr>
+                                <th>Cargo:</th>
+                                <td>{{ empleado.cargo }}</td>
+                            </tr>
+                            <tr>
+                                <th>Departamento:</th>
+                                <td>{{ empleado.departamento }}</td>
+                            </tr>
+                            <tr>
+                                <th>Sueldo:</th>
+                                <td>${{ empleado.sueldo|floatformat:2 }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'empleado_detalle' empleado.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sí, Eliminar Empleado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

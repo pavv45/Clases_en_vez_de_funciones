@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Sobretiempo #{{ sobretiempo.id }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'sobretiempos_lista' %}">Sobretiempos</a></li>
+<li class="breadcrumb-item active">Sobretiempo #{{ sobretiempo.id }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h2><i class="bi bi-clock-history"></i> Detalle del Sobretiempo</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'sobretiempo_editar' sobretiempo.id %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <a href="{% url 'sobretiempo_eliminar' sobretiempo.id %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Eliminar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Información del Empleado -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Información del Empleado</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">Nombre:</th>
+                        <td>
+                            <a href="{% url 'empleado_detalle' sobretiempo.empleado.id %}">
+                                {{ sobretiempo.empleado.nombre }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Cédula:</th>
+                        <td>{{ sobretiempo.empleado.cedula }}</td>
+                    </tr>
+                    <tr>
+                        <th>Departamento:</th>
+                        <td>{{ sobretiempo.empleado.departamento }}</td>
+                    </tr>
+                    <tr>
+                        <th>Cargo:</th>
+                        <td>{{ sobretiempo.empleado.cargo }}</td>
+                    </tr>
+                    <tr>
+                        <th>Sueldo:</th>
+                        <td><strong>${{ sobretiempo.empleado.sueldo|floatformat:2 }}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información del Sobretiempo -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock"></i> Información del Sobretiempo</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">Fecha:</th>
+                        <td>{{ sobretiempo.fecha_registro|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Tipo:</th>
+                        <td>
+                            <span class="badge bg-info">{{ sobretiempo.tipo_sobretiempo.codigo }}</span>
+                            {{ sobretiempo.tipo_sobretiempo.descripcion }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Factor:</th>
+                        <td><strong>{{ sobretiempo.tipo_sobretiempo.factor }}x</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Horas Trabajadas:</th>
+                        <td><strong>{{ sobretiempo.numero_horas }} horas</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cálculo Detallado -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calculator"></i> Cálculo del Sobretiempo</h5>
+            </div>
+            <div class="card-body">
+                {% load humanize %}
+                {% widthratio sobretiempo.empleado.sueldo 240 1 as valor_hora %}
+                
+                <div class="row text-center mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h6>Sueldo Mensual</h6>
+                            <div class="stats-number" style="font-size: 1.8rem;">${{ sobretiempo.empleado.sueldo|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <h6>Valor por Hora</h6>
+                            <div class="stats-number" style="font-size: 1.8rem;">${{ valor_hora|floatformat:2 }}</div>
+                            <small>(Sueldo ÷ 240 hrs)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <h6>Horas × Factor</h6>
+                            <div class="stats-number" style="font-size: 1.8rem;">{{ sobretiempo.numero_horas }} × {{ sobretiempo.tipo_sobretiempo.factor }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <h6>Valor Total</h6>
+                            <div class="stats-number" style="font-size: 2rem;">${{ sobretiempo.valor|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    <strong>Fórmula aplicada:</strong>
+                    <code>(${{ sobretiempo.empleado.sueldo|floatformat:2 }} ÷ 240 horas) × {{ sobretiempo.numero_horas }} horas × {{ sobretiempo.tipo_sobretiempo.factor }} factor = ${{ sobretiempo.valor|floatformat:2 }}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'sobretiempos_lista' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a la lista
+    </a>
+    <a href="{% url 'sobretiempos_por_empleado' sobretiempo.empleado.id %}" class="btn btn-info">
+        <i class="bi bi-list"></i> Ver todos los sobretiempos de {{ sobretiempo.empleado.nombre }}
+    </a>
+</div>
+{% endblock %}

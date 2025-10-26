@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'empleados_lista' %}">Empleados</a></li>
+    <li class="breadcrumb-item active">{{ titulo }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-primary">
+            <i class="bi bi-person-plus"></i> {{ titulo }}
+        </h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-fill"></i> Información del Empleado
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cedula.id_for_label }}" class="form-label">Cédula</label>
+                            {{ form.cedula }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre Completo</label>
+                            {{ form.nombre }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cargo.id_for_label }}" class="form-label">Cargo</label>
+                            {{ form.cargo }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.departamento.id_for_label }}" class="form-label">Departamento</label>
+                            {{ form.departamento }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.sueldo.id_for_label }}" class="form-label">Sueldo</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.sueldo }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'empleados_lista' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Empleado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

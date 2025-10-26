@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'sobretiempos_lista' %}">Sobretiempos</a></li>
+<li class="breadcrumb-item active">{{ titulo }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-clock-history"></i> {{ titulo }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.empleado.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> {{ form.empleado.label }}
+                            </label>
+                            {{ form.empleado }}
+                            {% if form.empleado.errors %}
+                                <div class="text-danger">{{ form.empleado.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.fecha_registro.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar"></i> {{ form.fecha_registro.label }}
+                            </label>
+                            {{ form.fecha_registro }}
+                            {% if form.fecha_registro.errors %}
+                                <div class="text-danger">{{ form.fecha_registro.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.tipo_sobretiempo.id_for_label }}" class="form-label">
+                                <i class="bi bi-tag"></i> {{ form.tipo_sobretiempo.label }}
+                            </label>
+                            {{ form.tipo_sobretiempo }}
+                            {% if form.tipo_sobretiempo.errors %}
+                                <div class="text-danger">{{ form.tipo_sobretiempo.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.numero_horas.id_for_label }}" class="form-label">
+                                <i class="bi bi-clock"></i> {{ form.numero_horas.label }}
+                            </label>
+                            {{ form.numero_horas }}
+                            {% if form.numero_horas.errors %}
+                                <div class="text-danger">{{ form.numero_horas.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Nota:</strong> El valor del sobretiempo se calculará automáticamente basándose en:
+                        <ul class="mb-0 mt-2">
+                            <li>Sueldo mensual del empleado</li>
+                            <li>Número de horas trabajadas</li>
+                            <li>Factor del tipo de sobretiempo</li>
+                        </ul>
+                        <small class="text-muted">Fórmula: (Sueldo / 240 horas) × Número de horas × Factor</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'sobretiempos_lista' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Sobretiempo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

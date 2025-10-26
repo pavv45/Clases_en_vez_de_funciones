@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'nominas_lista' %}">Nóminas</a></li>
+    <li class="breadcrumb-item active">{{ titulo }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-primary">
+            <i class="bi bi-file-plus"></i> {{ titulo }}
+        </h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar3"></i> Información de la Nómina
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.aniomes.id_for_label }}" class="form-label">Año y Mes</label>
+                        {{ form.aniomes }}
+                        <div class="form-text">Formato: YYYYMM (ejemplo: 202501 para Enero 2025)</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'nominas_lista' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Crear Nómina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Información:</strong> Una vez creada la nómina, podrás agregar los detalles de cada empleado.
+        </div>
+    </div>
+</div>
+{% endblock %}

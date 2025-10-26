@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Sobretiempos - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Sobretiempos</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2><i class="bi bi-clock-history"></i> Gestión de Sobretiempos</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'sobretiempo_crear' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Sobretiempo
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label"><i class="bi bi-tag"></i> Tipo de Sobretiempo</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    {% for tipo in tipos_sobretiempo %}
+                        <option value="{{ tipo.id }}" {% if request.GET.tipo == tipo.id|stringformat:"s" %}selected{% endif %}>
+                            {{ tipo.descripcion }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="bi bi-calendar"></i> Fecha Desde</label>
+                <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="bi bi-calendar"></i> Fecha Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="bi bi-person"></i> Empleado</label>
+                <select name="empleado" class="form-select">
+                    <option value="">Todos</option>
+                    {% for empleado in empleados %}
+                        <option value="{{ empleado.id }}" {% if request.GET.empleado == empleado.id|stringformat:"s" %}selected{% endif %}>
+                            {{ empleado.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+                <a href="{% url 'sobretiempos_lista' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de Sobretiempos -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list"></i> Lista de Sobretiempos</h5>
+    </div>
+    <div class="card-body">
+        {% if sobretiempos %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Empleado</th>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Factor</th>
+                            <th>Horas</th>
+                            <th>Valor Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sobretiempo in sobretiempos %}
+                        <tr>
+                            <td>{{ sobretiempo.id }}</td>
+                            <td>
+                                <a href="{% url 'sobretiempos_por_empleado' sobretiempo.empleado.id %}">
+                                    {{ sobretiempo.empleado.nombre }}
+                                </a>
+                            </td>
+                            <td>{{ sobretiempo.fecha_registro|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ sobretiempo.tipo_sobretiempo.codigo }}</span>
+                                {{ sobretiempo.tipo_sobretiempo.descripcion }}
+                            </td>
+                            <td>{{ sobretiempo.tipo_sobretiempo.factor }}x</td>
+                            <td><strong>{{ sobretiempo.numero_horas }} hrs</strong></td>
+                            <td><span class="badge bg-success">${{ sobretiempo.valor|floatformat:2 }}</span></td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'sobretiempo_detalle' sobretiempo.id %}" class="btn btn-sm btn-info" title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'sobretiempo_editar' sobretiempo.id %}" class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'sobretiempo_eliminar' sobretiempo.id %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No hay sobretiempos registrados.
+                <a href="{% url 'sobretiempo_crear' %}">Registrar el primero</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

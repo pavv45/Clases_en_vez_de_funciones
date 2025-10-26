@@ -1,0 +1,84 @@
+{% extends 'base_auth.html' %}
+
+{% block title %}Iniciar Sesión - Sistema de Nóminas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">
+                            <i class="bi bi-person"></i> Usuario
+                        </label>
+                        <input type="text"
+                               name="username"
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               id="id_username"
+                               placeholder="Ingrese su usuario"
+                               required>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.username.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">
+                            <i class="bi bi-lock"></i> Contraseña
+                        </label>
+                        <input type="password"
+                               name="password"
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                               id="id_password"
+                               placeholder="Ingrese su contraseña"
+                               required>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Entrar
+                        </button>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-center">
+                        <p class="mb-0">
+                            ¿No tienes cuenta?
+                            <a href="{% url 'registro' %}" class="text-decoration-none">
+                                <strong>Regístrate aquí</strong>
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 text-white">
+            <small>
+                <i class="bi bi-shield-check"></i>
+                Sistema seguro de gestión de nóminas
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

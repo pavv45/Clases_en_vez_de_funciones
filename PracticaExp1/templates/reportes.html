@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportes - Sistema de Nóminas{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-primary">
+            <i class="bi bi-graph-up"></i> Reportes
+        </h1>
+        <p class="lead text-muted">Reportes y estadísticas del sistema</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-bar-chart" style="font-size: 4rem; color: #6c757d;"></i>
+        <h4 class="mt-3">Próximamente</h4>
+        <p class="text-muted">Los reportes estarán disponibles pronto.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Volver al Dashboard</a>
+    </div>
+</div>
+{% endblock %}

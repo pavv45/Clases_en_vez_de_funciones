@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Empleados - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item active">Empleados</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-5 text-primary mb-0">
+            <i class="bi bi-people"></i> Empleados
+        </h1>
+        <p class="lead text-muted">Gestión de empleados del sistema</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'empleado_crear' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-person-plus"></i> Nuevo Empleado
+        </a>
+    </div>
+</div>
+
+<!-- Lista de Empleados -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list-ul"></i> Lista de Empleados
+        </h5>
+        <span class="badge bg-primary">{{ empleados.count }} empleados</span>
+    </div>
+    <div class="card-body p-0">
+        {% if empleados %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-card-text"></i> Cédula</th>
+                            <th><i class="bi bi-person"></i> Nombre</th>
+                            <th><i class="bi bi-briefcase"></i> Cargo</th>
+                            <th><i class="bi bi-building"></i> Departamento</th>
+                            <th><i class="bi bi-cash-stack"></i> Sueldo</th>
+                            <th><i class="bi bi-gear"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empleado in empleados %}
+                        <tr>
+                            <td>
+                                <span class="font-monospace">{{ empleado.cedula }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                                         style="width: 40px; height: 40px;">
+                                        {{ empleado.nombre|first|upper }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ empleado.nombre }}</h6>
+                                        <small class="text-muted">ID: {{ empleado.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">{{ empleado.cargo }}</span>
+                            </td>
+                            <td>{{ empleado.departamento }}</td>
+                            <td>
+                                <span class="fw-bold text-success">${{ empleado.sueldo|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'empleado_detalle' empleado.id %}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'empleado_editar' empleado.id %}"
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'empleado_eliminar' empleado.id %}"
+                                       class="btn btn-sm btn-outline-danger btn-delete"
+                                       title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-person-x text-muted" style="font-size: 4rem;"></i>
+                <h4 class="text-muted mt-3">No hay empleados registrados</h4>
+                <p class="text-muted">Comienza agregando el primer empleado al sistema.</p>
+                <a href="{% url 'empleado_crear' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Agregar Empleado
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

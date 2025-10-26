@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Nómina - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'nominas_lista' %}">Nóminas</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'nomina_detalle' nomina.id %}">{{ nomina }}</a></li>
+    <li class="breadcrumb-item active">Eliminar</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-file-x text-danger" style="font-size: 4rem;"></i>
+                </div>
+
+                <h4 class="text-center mb-3">¿Está seguro de eliminar esta nómina?</h4>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Advertencia:</strong> Esta acción no se puede deshacer. Se eliminarán todos los detalles de empleados asociados.
+                </div>
+
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6>Información de la nómina a eliminar:</h6>
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th width="30%">Período:</th>
+                                <td><strong>{{ nomina }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Total Ingresos:</th>
+                                <td class="text-success">${{ nomina.tot_ing|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Descuentos:</th>
+                                <td class="text-danger">${{ nomina.tot_des|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Neto:</th>
+                                <td class="fw-bold text-primary">${{ nomina.neto|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Empleados:</th>
+                                <td>
+                                    <span class="badge bg-info">{{ detalles_count }}</span>
+                                    {% if detalles_count > 0 %}
+                                        empleado{{ detalles_count|pluralize }}
+                                    {% else %}
+                                        empleados
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {% if detalles_count > 0 %}
+                <div class="alert alert-danger mt-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Importante:</strong> Al eliminar esta nómina también se eliminarán automáticamente los detalles de {{ detalles_count }} empleado{{ detalles_count|pluralize }}.
+                </div>
+                {% endif %}
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'nomina_detalle' nomina.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sí, Eliminar Nómina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header.bg-danger {
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+</style>
+{% endblock %}

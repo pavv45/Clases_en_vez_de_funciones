@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Préstamos - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Préstamos</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2><i class="bi bi-cash-coin"></i> Gestión de Préstamos</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'prestamo_crear' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Préstamo
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label"><i class="bi bi-tag"></i> Tipo de Préstamo</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    {% for tipo in tipos_prestamo %}
+                        <option value="{{ tipo.id }}" {% if request.GET.tipo == tipo.id|stringformat:"s" %}selected{% endif %}>
+                            {{ tipo.descripcion }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="bi bi-calendar"></i> Fecha</label>
+                <input type="date" name="fecha" class="form-control" value="{{ request.GET.fecha }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="bi bi-person"></i> Empleado</label>
+                <select name="empleado" class="form-select">
+                    <option value="">Todos</option>
+                    {% for empleado in empleados %}
+                        <option value="{{ empleado.id }}" {% if request.GET.empleado == empleado.id|stringformat:"s" %}selected{% endif %}>
+                            {{ empleado.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+                <a href="{% url 'prestamos_lista' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de Préstamos -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list"></i> Lista de Préstamos</h5>
+    </div>
+    <div class="card-body">
+        {% if prestamos %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Empleado</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Interés</th>
+                            <th>Total a Pagar</th>
+                            <th>Cuotas</th>
+                            <th>Cuota Mensual</th>
+                            <th>Saldo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prestamo in prestamos %}
+                        <tr>
+                            <td>{{ prestamo.id }}</td>
+                            <td>
+                                <a href="{% url 'prestamos_por_empleado' prestamo.empleado.id %}">
+                                    {{ prestamo.empleado.nombre }}
+                                </a>
+                            </td>
+                            <td>{{ prestamo.tipo_prestamo.descripcion }}</td>
+                            <td>{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</td>
+                            <td>${{ prestamo.monto|floatformat:2 }}</td>
+                            <td>${{ prestamo.interes|floatformat:2 }}</td>
+                            <td><strong>${{ prestamo.monto_pagar|floatformat:2 }}</strong></td>
+                            <td>{{ prestamo.numero_cuotas }}</td>
+                            <td>${{ prestamo.cuota_mensual|floatformat:2 }}</td>
+                            <td>
+                                {% if prestamo.saldo > 0 %}
+                                    <span class="badge bg-warning">${{ prestamo.saldo|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">Pagado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'prestamo_detalle' prestamo.id %}" class="btn btn-sm btn-info" title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'prestamo_editar' prestamo.id %}" class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'prestamo_eliminar' prestamo.id %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No hay préstamos registrados.
+                <a href="{% url 'prestamo_crear' %}">Crear el primero</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

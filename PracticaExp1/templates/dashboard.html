@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item active">Panel Principal</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 text-dark fw-bold">
+            <i class="bi bi-speedometer2"></i> Panel Principal
+        </h1>
+    </div>
+</div>
+
+<!-- Estadísticas Principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <h4 class="stats-number mb-0 text-primary">{{ total_empleados }}</h4>
+            <small class="text-muted">Empleados Activos</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <h4 class="stats-number mb-0 text-success">{{ total_nominas }}</h4>
+            <small class="text-muted">Nóminas Procesadas</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <h4 class="stats-number mb-0 text-dark">${{ total_nomina_mes|floatformat:2 }}</h4>
+            <small class="text-muted">Nómina del Mes</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <h4 class="stats-number mb-0 text-secondary">${{ promedio_sueldo|floatformat:2 }}</h4>
+            <small class="text-muted">Sueldo Promedio</small>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de Acceso Directo -->
+<div class="row mb-4 text-center">
+    <div class="col-12">
+        <div class="d-flex justify-content-center gap-4 flex-wrap">
+            <a href="{% url 'empleado_crear' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-person-plus"></i> Nuevo Empleado
+            </a>
+            <a href="{% url 'nomina_crear' %}" class="btn btn-success btn-lg">
+                <i class="bi bi-file-plus"></i> Nueva Nómina
+            </a>
+            <a href="{% url 'empleados_lista' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-people"></i> Ver Empleados
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Últimos Empleados -->
+    <div class="col-md-6 mb-4">
+        <div class="card simple-card h-100">
+            <div class="card-header simple-card-header d-flex justify-content-between">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-person-check"></i> Últimos Empleados</h6>
+                <a href="{% url 'empleados_lista' %}" class="btn btn-sm btn-outline-dark">Ver Todos</a>
+            </div>
+            <div class="card-body">
+                {% if ultimos_empleados %}
+                    <ul class="list-group list-group-flush">
+                        {% for empleado in ultimos_empleados %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ empleado.nombre }}</strong><br>
+                                <small class="text-muted">{{ empleado.cargo }} - {{ empleado.departamento }}</small>
+                            </div>
+                            <span class="fw-bold text-dark">${{ empleado.sueldo|floatformat:2 }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center">No hay empleados registrados</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Nóminas Recientes -->
+    <div class="col-md-6 mb-4">
+        <div class="card simple-card h-100">
+            <div class="card-header simple-card-header d-flex justify-content-between">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-file-earmark-text"></i> Nóminas Recientes</h6>
+                <a href="{% url 'nominas_lista' %}" class="btn btn-sm btn-outline-dark">Ver Todas</a>
+            </div>
+            <div class="card-body">
+                {% if nominas_recientes %}
+                    <ul class="list-group list-group-flush">
+                        {% for nomina in nominas_recientes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ nomina }}</strong><br>
+                                <small class="text-muted">{{ nomina.nominadetalle_set.count }} empleados</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold text-dark">${{ nomina.neto|floatformat:2 }}</span><br>
+                                <small class="text-muted">Total Neto</small>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center">No hay nóminas procesadas</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Distribución por Departamento -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-pie-chart"></i> Distribución de Empleados</h6>
+            </div>
+            <div class="card-body">
+                {% if departamentos_stats %}
+                    <div class="row">
+                        {% for dept in departamentos_stats %}
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 text-center bg-light">
+                                <h4 class="text-dark">{{ dept.total }}</h4>
+                                <small class="text-muted">{{ dept.departamento }}</small>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-primary" role="progressbar"
+                                         style="width: {{ dept.porcentaje }}%"
+                                         aria-valuenow="{{ dept.porcentaje }}"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                         {{ dept.porcentaje|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No hay datos para mostrar</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: white;
+        border: 1px solid black;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: none !important;
+        min-height: 100px;
+    }
+
+    .stats-number {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .btn {
+        font-size: 1.5rem; /* casi el doble */
+        padding: 15px 30px; /* aumentar tamaño */
+        min-width: 200px;
+    }
+
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* Cards sencillos solo marco blanco */
+    .simple-card {
+        background-color: #ffffff;
+        border: 1px solid #ffffff;
+        box-shadow: none !important;
+    }
+
+    .simple-card-header {
+        background-color: #ffffff;
+        border-bottom: 1px solid #ffffff;
+        color: #000000;
+    }
+</style>
+{% endblock %}

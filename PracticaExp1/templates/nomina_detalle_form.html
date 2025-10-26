@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'nominas_lista' %}">Nóminas</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'nomina_detalle' nomina.id %}">{{ nomina }}</a></li>
+    <li class="breadcrumb-item active">Agregar Empleado</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-primary">
+            <i class="bi bi-person-plus"></i> {{ titulo }}
+        </h1>
+        <p class="lead text-muted">Agrega un empleado a la nómina {{ nomina }}</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-fill"></i> Información del Empleado para Nómina
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.empleado.id_for_label }}" class="form-label">Empleado</label>
+                            {{ form.empleado }}
+                            <div class="form-text">Selecciona el empleado a agregar</div>
+                        </div>
+                        
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.bono.id_for_label }}" class="form-label">Bono</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.bono }}
+                            </div>
+                            <div class="form-text">Bonificaciones adicionales (opcional)</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.prestamo.id_for_label }}" class="form-label">Préstamo</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.prestamo }}
+                            </div>
+                            <div class="form-text">Descuentos por préstamos (opcional)</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Cálculo automático:</strong> Los totales de ingresos, IESS (9.45%), descuentos y neto se calcularán automáticamente.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'nomina_detalle' nomina.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Agregar a Nómina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

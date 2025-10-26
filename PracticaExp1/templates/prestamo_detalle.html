@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Préstamo #{{ prestamo.id }} - Sistema de Nóminas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'prestamos_lista' %}">Préstamos</a></li>
+<li class="breadcrumb-item active">Préstamo #{{ prestamo.id }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h2><i class="bi bi-cash-coin"></i> Detalle del Préstamo</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'prestamo_editar' prestamo.id %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <a href="{% url 'prestamo_eliminar' prestamo.id %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Eliminar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Información del Empleado -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Información del Empleado</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">Nombre:</th>
+                        <td>
+                            <a href="{% url 'empleado_detalle' prestamo.empleado.id %}">
+                                {{ prestamo.empleado.nombre }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Cédula:</th>
+                        <td>{{ prestamo.empleado.cedula }}</td>
+                    </tr>
+                    <tr>
+                        <th>Departamento:</th>
+                        <td>{{ prestamo.empleado.departamento }}</td>
+                    </tr>
+                    <tr>
+                        <th>Cargo:</th>
+                        <td>{{ prestamo.empleado.cargo }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información del Préstamo -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-tag"></i> Información del Préstamo</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">Tipo:</th>
+                        <td>{{ prestamo.tipo_prestamo.descripcion }}</td>
+                    </tr>
+                    <tr>
+                        <th>Tasa:</th>
+                        <td>{{ prestamo.tipo_prestamo.tasa }}%</td>
+                    </tr>
+                    <tr>
+                        <th>Fecha:</th>
+                        <td>{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>N° Cuotas:</th>
+                        <td>{{ prestamo.numero_cuotas }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detalles Financieros -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-currency-dollar"></i> Detalles Financieros</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h6>Monto del Préstamo</h6>
+                            <div class="stats-number">${{ prestamo.monto|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <h6>Interés</h6>
+                            <div class="stats-number">${{ prestamo.interes|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <h6>Total a Pagar</h6>
+                            <div class="stats-number">${{ prestamo.monto_pagar|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <h6>Cuota Mensual</h6>
+                            <div class="stats-number">${{ prestamo.cuota_mensual|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5 class="mb-3">Estado del Préstamo</h5>
+                        <div class="progress" style="height: 30px;">
+                            {% widthratio prestamo.saldo prestamo.monto_pagar 100 as porcentaje_saldo %}
+                            {% widthratio 100 1 1 as cien %}
+                            {% widthratio cien porcentaje_saldo 1 as porcentaje_pagado %}
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ porcentaje_pagado }}%;" 
+                                 aria-valuenow="{{ porcentaje_pagado }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                Pagado: {{ porcentaje_pagado }}%
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {{ porcentaje_saldo }}%;" 
+                                 aria-valuenow="{{ porcentaje_saldo }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                Saldo: {{ porcentaje_saldo }}%
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <h4>Saldo Pendiente: 
+                                {% if prestamo.saldo > 0 %}
+                                    <span class="text-warning">${{ prestamo.saldo|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="text-success">$0.00 - PAGADO</span>
+                                {% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'prestamos_lista' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a la lista
+    </a>
+    <a href="{% url 'prestamos_por_empleado' prestamo.empleado.id %}" class="btn btn-info">
+        <i class="bi bi-list"></i> Ver todos los préstamos de {{ prestamo.empleado.nombre }}
+    </a>
+</div>
+{% endblock %}
