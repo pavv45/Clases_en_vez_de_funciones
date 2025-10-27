@@ -9,266 +9,288 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 import datetime
 
-@login_required
-def dashboard(request):
-    """Vista principal del dashboard"""
-    # Estadísticas generales
-    total_empleados = Empleado.objects.count()
-    total_nominas = Nomina.objects.count()
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.db.models import Q, Sum, Avg, Count
+from .mixins import TitleContextMixin
 
-    # Nómina del mes actual
-    mes_actual = datetime.datetime.now().strftime('%Y%m')
-    nomina_mes = Nomina.objects.filter(aniomes=mes_actual).first()
-    total_nomina_mes = nomina_mes.neto if nomina_mes else 0
+class DashboardView(LoginRequiredMixin, TitleContextMixin, TemplateView):
+    template_name = 'dashboard.html'
+    title1 = "Sistema de Nóminas "
+    title2 = "Panel Principal"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estadísticas generales
+        context['total_empleados'] = Empleado.objects.count()
+        context['total_nominas'] = Nomina.objects.count()
+        
+        # Nómina del mes actual
+        mes_actual = datetime.datetime.now().strftime('%Y%m')
+        nomina_mes = Nomina.objects.filter(aniomes=mes_actual).first()
+        context['total_nomina_mes'] = nomina_mes.neto if nomina_mes else 0
+        
+        # Promedio de sueldos
+        context['promedio_sueldo'] = Empleado.objects.aggregate(
+            promedio=Avg('sueldo')
+        )['promedio'] or 0
+        
+        # Últimos empleados registrados
+        context['ultimos_empleados'] = Empleado.objects.order_by('-id')[:5]
+        
+        # Nóminas recientes
+        context['nominas_recientes'] = Nomina.objects.order_by('-aniomes')[:5]
+        
+        # Estadísticas por departamento
+        departamentos_stats = Empleado.objects.values('departamento').annotate(
+            total=Count('id')
+        ).order_by('-total')
+        
+        # Calcular porcentajes
+        total_emp = context['total_empleados'] if context['total_empleados'] > 0 else 1
+        for dept in departamentos_stats:
+            dept['porcentaje'] = (dept['total'] / total_emp) * 100
+        
+        context['departamentos_stats'] = departamentos_stats
+        
+        return context
 
-    # Promedio de sueldos
-    promedio_sueldo = Empleado.objects.aggregate(
-        promedio=Avg('sueldo')
-    )['promedio'] or 0
+# ========== VISTAS DE EMPLEADOS ==========
 
-    # Últimos empleados registrados
-    ultimos_empleados = Empleado.objects.order_by('-id')[:5]
-
-    # Nóminas recientes
-    nominas_recientes = Nomina.objects.order_by('-aniomes')[:5]
-
-    # Estadísticas por departamento
-    departamentos_stats = Empleado.objects.values('departamento').annotate(
-        total=Count('id')
-    ).order_by('-total')
-
-    # Calcular porcentajes
-    total_emp = total_empleados if total_empleados > 0 else 1
-    for dept in departamentos_stats:
-        dept['porcentaje'] = (dept['total'] / total_emp) * 100
-
-    context = {
-        'total_empleados': total_empleados,
-        'total_nominas': total_nominas,
-        'total_nomina_mes': total_nomina_mes,
-        'promedio_sueldo': promedio_sueldo,
-        'ultimos_empleados': ultimos_empleados,
-        'nominas_recientes': nominas_recientes,
-        'departamentos_stats': departamentos_stats,
-    }
-
-    return render(request, 'dashboard.html', context)
-
-@login_required
-def empleados_lista(request):
-    """Lista de empleados"""
-    empleados = Empleado.objects.all().order_by('nombre')
-
-    context = {
-        'empleados': empleados,
-    }
-
-    return render(request, 'empleados_lista.html', context)
-
-@login_required
-def empleado_detalle(request, empleado_id):
-    """Detalle de un empleado específico"""
-    empleado = get_object_or_404(Empleado, id=empleado_id)
-
-    # Nóminas del empleado
-    nominas_empleado = NominaDetalle.objects.filter(
-        empleado=empleado
-    ).order_by('-nomina__aniomes')
-
-    context = {
-        'empleado': empleado,
-        'nominas_empleado': nominas_empleado,
-    }
-
-    return render(request, 'empleado_detalle.html', context)
-
-@login_required
-def empleado_crear(request):
-    """Crear nuevo empleado"""
-    if request.method == 'POST':
-        form = EmpleadoForm(request.POST)
-        if form.is_valid():
-            empleado = form.save()
-            messages.success(
-                request,
-                f'Empleado {empleado.nombre} creado exitosamente.'
+class EmpleadoListView(LoginRequiredMixin, TitleContextMixin, ListView):
+    model = Empleado
+    template_name = 'empleados_lista.html'
+    context_object_name = 'empleados'
+    paginate_by = 10
+    title1 = "Empleados"
+    title2 = "Listado de Empleados"
+    
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('nombre')
+        query = self.request.GET.get('q', '')
+        if query:
+            queryset = queryset.filter(
+                Q(nombre__icontains=query) |
+                Q(cedula__icontains=query) |
+                Q(departamento__icontains=query)
             )
-            return redirect('empleado_detalle', empleado_id=empleado.id)
-    else:
-        form = EmpleadoForm()
+        return queryset
 
-    context = {'form': form, 'titulo': 'Nuevo Empleado'}
-    return render(request, 'empleado_form.html', context)
 
-@login_required
-def empleado_editar(request, empleado_id):
-    """Editar empleado existente"""
-    empleado = get_object_or_404(Empleado, id=empleado_id)
+class EmpleadoDetailView(LoginRequiredMixin, TitleContextMixin, DetailView):
+    model = Empleado
+    template_name = 'empleado_detalle.html'
+    context_object_name = 'empleado'
+    pk_url_kwarg = 'empleado_id'
+    title1 = "Empleados"
+    title2 = "Detalle del Empleado"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Nóminas del empleado
+        context['nominas_empleado'] = NominaDetalle.objects.filter(
+            empleado=self.object
+        ).order_by('-nomina__aniomes')
+        return context
 
-    if request.method == 'POST':
-        form = EmpleadoForm(request.POST, instance=empleado)
-        if form.is_valid():
-            empleado = form.save()
-            messages.success(
-                request,
-                f'Empleado {empleado.nombre} actualizado exitosamente.'
-            )
-            return redirect('empleado_detalle', empleado_id=empleado.id)
-    else:
-        form = EmpleadoForm(instance=empleado)
 
-    context = {
-        'form': form,
-        'empleado': empleado,
-        'titulo': f'Editar - {empleado.nombre}'
-    }
-    return render(request, 'empleado_form.html', context)
+class EmpleadoCreateView(LoginRequiredMixin, TitleContextMixin, CreateView):
+    model = Empleado
+    form_class = EmpleadoForm
+    template_name = 'empleado_form.html'
+    title1 = "Empleados"
+    title2 = "Nuevo Empleado"
+    
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            f'Empleado {self.object.nombre} creado exitosamente.'
+        )
+        return reverse_lazy('empleado_detalle', kwargs={'empleado_id': self.object.id})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Nuevo Empleado'
+        return context
 
-@login_required
-def empleado_eliminar(request, empleado_id):
-    """Eliminar empleado"""
-    empleado = get_object_or_404(Empleado, id=empleado_id)
 
-    if request.method == 'POST':
-        nombre = empleado.nombre
-        empleado.delete()
+class EmpleadoUpdateView(LoginRequiredMixin, TitleContextMixin, UpdateView):
+    model = Empleado
+    form_class = EmpleadoForm
+    template_name = 'empleado_form.html'
+    pk_url_kwarg = 'empleado_id'
+    title1 = "Empleados"
+    title2 = "Editar Empleado"
+    
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            f'Empleado {self.object.nombre} actualizado exitosamente.'
+        )
+        return reverse_lazy('empleado_detalle', kwargs={'empleado_id': self.object.id})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = f'Editar - {self.object.nombre}'
+        context['empleado'] = self.object
+        return context
+
+
+class EmpleadoDeleteView(LoginRequiredMixin, TitleContextMixin, DeleteView):
+    model = Empleado
+    template_name = 'empleado_confirmar_eliminar.html'
+    pk_url_kwarg = 'empleado_id'
+    success_url = reverse_lazy('empleados_lista')
+    title1 = "Empleados"
+    title2 = "Eliminar Empleado"
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        nombre = self.object.nombre
         messages.success(
             request,
             f'Empleado {nombre} eliminado exitosamente.'
         )
-        return redirect('empleados_lista')
+        return super().delete(request, *args, **kwargs)
 
-    context = {'empleado': empleado}
-    return render(request, 'empleado_confirmar_eliminar.html', context)
+# ========== VISTAS DE NÓMINAS ==========
 
-@login_required
-def nominas_lista(request):
-    """Lista de nóminas"""
-    nominas = Nomina.objects.all().order_by('-aniomes')
+class NominaListView(LoginRequiredMixin, TitleContextMixin, ListView):
+    model = Nomina
+    template_name = 'nominas_lista.html'
+    context_object_name = 'nominas'
+    paginate_by = 10
+    title1 = "Nóminas"
+    title2 = "Listado de Nóminas"
+    
+    def get_queryset(self):
+        return super().get_queryset().order_by('-aniomes')
 
-    context = {
-        'nominas': nominas,
-    }
 
-    return render(request, 'nominas_lista.html', context)
+class NominaDetailView(LoginRequiredMixin, TitleContextMixin, DetailView):
+    model = Nomina
+    template_name = 'nomina_detalle.html'
+    context_object_name = 'nomina'
+    pk_url_kwarg = 'nomina_id'
+    title1 = "Nóminas"
+    title2 = "Detalle de Nómina"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['detalles'] = NominaDetalle.objects.filter(nomina=self.object)
+        return context
 
-@login_required
-def nomina_crear(request):
-    """Crear nueva nómina"""
-    if request.method == 'POST':
-        form = NominaForm(request.POST)
-        if form.is_valid():
-            nomina = form.save()
-            messages.success(
-                request,
-                f'Nómina {nomina} creada exitosamente.'
-            )
-            return redirect('nomina_detalle', nomina_id=nomina.id)
-    else:
-        form = NominaForm()
 
-    context = {'form': form, 'titulo': 'Nueva Nómina'}
-    return render(request, 'nomina_form.html', context)
+class NominaCreateView(LoginRequiredMixin, TitleContextMixin, CreateView):
+    model = Nomina
+    form_class = NominaForm
+    template_name = 'nomina_form.html'
+    title1 = "Nóminas"
+    title2 = "Nueva Nómina"
+    
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            f'Nómina {self.object} creada exitosamente.'
+        )
+        return reverse_lazy('nomina_detalle', kwargs={'nomina_id': self.object.id})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Nueva Nómina'
+        return context
 
-@login_required
-def nomina_detalle(request, nomina_id):
-    """Detalle de una nómina específica"""
-    nomina = get_object_or_404(Nomina, id=nomina_id)
-    detalles = NominaDetalle.objects.filter(nomina=nomina)
 
-    context = {
-        'nomina': nomina,
-        'detalles': detalles,
-    }
+class NominaUpdateView(LoginRequiredMixin, TitleContextMixin, UpdateView):
+    model = Nomina
+    form_class = NominaForm
+    template_name = 'nomina_form.html'
+    pk_url_kwarg = 'nomina_id'
+    title1 = "Nóminas"
+    title2 = "Editar Nómina"
+    
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            f'Nómina {self.object} actualizada exitosamente.'
+        )
+        return reverse_lazy('nomina_detalle', kwargs={'nomina_id': self.object.id})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = f'Editar - {self.object}'
+        context['nomina'] = self.object
+        return context
 
-    return render(request, 'nomina_detalle.html', context)
 
-@login_required
-def nomina_editar(request, nomina_id):
-    """Editar nómina existente"""
-    nomina = get_object_or_404(Nomina, id=nomina_id)
-
-    if request.method == 'POST':
-        form = NominaForm(request.POST, instance=nomina)
-        if form.is_valid():
-            nomina = form.save()
-            messages.success(
-                request,
-                f'Nómina {nomina} actualizada exitosamente.'
-            )
-            return redirect('nomina_detalle', nomina_id=nomina.id)
-    else:
-        form = NominaForm(instance=nomina)
-
-    context = {
-        'form': form,
-        'nomina': nomina,
-        'titulo': f'Editar - {nomina}'
-    }
-    return render(request, 'nomina_form.html', context)
-
-@login_required
-def nomina_eliminar(request, nomina_id):
-    """Eliminar nómina"""
-    nomina = get_object_or_404(Nomina, id=nomina_id)
-
-    if request.method == 'POST':
-        periodo = str(nomina)
-        nomina.delete()
+class NominaDeleteView(LoginRequiredMixin, TitleContextMixin, DeleteView):
+    model = Nomina
+    template_name = 'nomina_confirmar_eliminar.html'
+    pk_url_kwarg = 'nomina_id'
+    success_url = reverse_lazy('nominas_lista')
+    title1 = "Nóminas"
+    title2 = "Eliminar Nómina"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['detalles_count'] = NominaDetalle.objects.filter(nomina=self.object).count()
+        return context
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        periodo = str(self.object)
         messages.success(
             request,
             f'Nómina {periodo} eliminada exitosamente.'
         )
-        return redirect('nominas_lista')
+        return super().delete(request, *args, **kwargs)
 
-    # Obtener información adicional para mostrar en la confirmación
-    detalles_count = NominaDetalle.objects.filter(nomina=nomina).count()
 
-    context = {
-        'nomina': nomina,
-        'detalles_count': detalles_count
-    }
-    return render(request, 'nomina_confirmar_eliminar.html', context)
+class NominaDetalleCreateView(LoginRequiredMixin, TitleContextMixin, CreateView):
+    model = NominaDetalle
+    form_class = NominaDetalleForm
+    template_name = 'nomina_detalle_form.html'
+    title1 = "Nóminas"
+    title2 = "Agregar Empleado a Nómina"
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.nomina = get_object_or_404(Nomina, id=kwargs['nomina_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['nomina'] = self.nomina
+        context['titulo'] = f'Agregar Empleado a {self.nomina}'
+        return context
+    
+    def form_valid(self, form):
+        # Verificar si el empleado ya está en esta nómina
+        empleado = form.cleaned_data['empleado']
+        if NominaDetalle.objects.filter(nomina=self.nomina, empleado=empleado).exists():
+            messages.error(
+                self.request,
+                f'El empleado {empleado.nombre} ya está agregado a esta nómina.'
+            )
+            return self.form_invalid(form)
+        
+        form.instance.nomina = self.nomina
+        messages.success(
+            self.request,
+            f'Empleado {empleado.nombre} agregado a la nómina exitosamente.'
+        )
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('nomina_detalle', kwargs={'nomina_id': self.nomina.id})
 
-@login_required
-def nomina_detalle_crear(request, nomina_id):
-    """Crear detalle de nómina para un empleado"""
-    nomina = get_object_or_404(Nomina, id=nomina_id)
+# ========== VISTA DE REPORTES ==========
 
-    if request.method == 'POST':
-        form = NominaDetalleForm(request.POST)
-        if form.is_valid():
-            # Verificar si el empleado ya está en esta nómina
-            empleado = form.cleaned_data['empleado']
-            if NominaDetalle.objects.filter(nomina=nomina, empleado=empleado).exists():
-                messages.error(
-                    request,
-                    f'El empleado {empleado.nombre} ya está agregado a esta nómina.'
-                )
-            else:
-                detalle = form.save(commit=False)
-                detalle.nomina = nomina
-                detalle.save()
-                messages.success(
-                    request,
-                    f'Empleado {detalle.empleado.nombre} agregado a la nómina exitosamente.'
-                )
-                return redirect('nomina_detalle', nomina_id=nomina.id)
-    else:
-        form = NominaDetalleForm()
-
-    context = {
-        'form': form,
-        'nomina': nomina,
-        'titulo': f'Agregar Empleado a {nomina}'
-    }
-    return render(request, 'nomina_detalle_form.html', context)
-
-@login_required
-def reportes(request):
-    """Página de reportes"""
-    context = {}
-    return render(request, 'reportes.html', context)
+class ReportesView(LoginRequiredMixin, TitleContextMixin, TemplateView):
+    template_name = 'reportes.html'
+    title1 = "Reportes"
+    title2 = "Reportes del Sistema"
 
 # Vista de registro
 def registro(request):
