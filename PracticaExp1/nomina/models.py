@@ -9,6 +9,8 @@ class Empleado(models.Model):
     sueldo = models.DecimalField(max_digits=10, decimal_places=2)
     departamento = models.CharField(max_length=100)
     cargo = models.CharField(max_length=100)
+    #añadi esto
+    fecha_ingreso = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.nombre} - {self.cedula}"
@@ -19,6 +21,10 @@ class Nomina(models.Model):
     tot_ing = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tot_des = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     neto = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    #estas dos lineas agrege, lo puiedo borrar si quiero 
+    fecha_generacion = models.DateField(default='2024-01-01')
+    descripcion = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         year = self.aniomes[:4]
@@ -59,8 +65,8 @@ class NominaDetalle(models.Model):
         # Asignar automáticamente el sueldo del empleado
         self.sueldo = sueldo
 
-        # Calcular totales automáticamente
-        self.tot_ing = sueldo + bono
+        # Calcular totales automáticamente  #aqui la primera linea cambie 
+        self.tot_ing = sueldo + Decimal(str(bono))
         self.iess = (self.tot_ing * Decimal('0.0945')).quantize(Decimal('0.01'))
         self.tot_des = self.iess + prestamo
         self.neto = self.tot_ing - self.tot_des

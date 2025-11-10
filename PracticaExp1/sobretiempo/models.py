@@ -27,9 +27,10 @@ class Sobretiempo(models.Model):
         # Calcular valor del sobretiempo
         # valor = (sueldo_mensual / horas_mensuales) * numero_horas * factor
         horas_mensuales = Decimal('240')  # 240 horas mensuales por defecto
-
+#esto tmb cambie solo las dos lineas
         valor_hora = self.empleado.sueldo / horas_mensuales
-        self.valor = valor_hora * self.numero_horas * self.tipo_sobretiempo.factor
+        self.valor = valor_hora * Decimal(str(self.numero_horas)) * self.tipo_sobretiempo.factor
+
 
         super().save(*args, **kwargs)
 
